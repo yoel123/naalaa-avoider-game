@@ -1,0 +1,449 @@
+import "Keycodes.lib"
+import "Speed.lib"
+
+set window (screenw()-300 )/2, (screenh() - 400)/2, 520, 540
+
+
+
+set redraw off
+
+rem player object
+p?
+p = createPlayer()
+
+rem enemy object
+e?[10]
+rem e[0] = createenemy()
+rem e[1] = createenemy()
+rem c = initEnemis(e)
+rem c = spawnEnemy(e)
+rem c = spawnEnemy(e)
+rem enemyCount = 0
+rem etst? = createenemy(1,e,enemyCount )
+rem etstt? = createenemy(1,e,enemyCount )
+
+
+rem enemy spawn counter
+spawnTimer = 300
+spawnTimerCount = 0
+
+rem points
+points = 0
+
+rem images vars
+player = 1
+enemy = 2
+
+rem init images
+load image player , "res/player.png"
+load image enemy , "res/bady.png"
+
+c = startScreen()
+
+c = resetGame(e,points)
+
+rem ---------game loop
+do
+
+    set color 0, 0, 0
+    cls
+
+rem ---------------start game loop--------------
+
+    rem --------------------- update
+	
+		rem player kyboard control
+		c = keyboardControl(p)
+		rem makes sure player stay on screen
+		c =  playerMovmentBounderis(p)
+		rem update enemies
+		c = enemyUpdate(e,points)
+		
+		c = collideEnemy(e,p,points)
+ 		c = spawnTimerf(e,spawnTimerCount ,spawnTimer)
+    rem -------------------- render
+		set color 255, 255, 255
+		
+		rem render player
+		draw image player, p.x, p.y
+
+		rem render enemies
+		c = renderEnemis(e)
+
+    rem draw points to screen
+    set caret 10, 10
+    write "points: ",points
+	
+  rem ytimer(spawnTimerCount ,spawnTimer)
+
+
+rem ---------------end game loop----------------------
+    redraw
+    _SPD_HoldFrame 60
+until keydown(VK_ESC, true) or not running()
+
+
+rem -------------------- player funcs ---------------
+
+rem creates player obj
+function createPlayer?()
+	p?
+	p.x = 200
+	p.y = 300
+	p.w = 20
+	p.h = 20
+	p.speed = 4
+	p.type$ = "player"
+	return p 
+endfunc
+rem end create player
+
+rem player movment bounderis
+function playerMovmentBounderis(&p?)
+
+	if p.x <0 then p.x = 0
+	if p.x >500 then p.x = 500
+	if p.y <25 then p.y = 25
+	if p.y >500 then p.y = 500
+
+	return 0 
+endfunc
+rem playerMovmentBounderis
+
+rem handale collision detection between enemy and player
+function collideEnemy(&e?[],p?,&points)
+
+	for i = 0 to sizeof(e)-1
+		rem check collision 
+		if collide(e[i],p)
+			rem show game over and reset
+			c = gameOverScreen(points)
+			c = resetGame(e,points)
+		endif
+
+	next
+
+endfunc
+rem end collideEnemy
+
+function resetGame(&e?[],&points)
+	c = initEnemis(e)
+	c = spawnEnemy(e)
+	c = spawnEnemy(e)
+	points = 0
+endfunc
+rem -------------------- end player funcs ---------------
+
+
+rem -------------------- enemy funcs ---------------
+
+rem create enemy
+
+function createenemy?()
+	
+	rem single enemy object
+	e?
+	
+	rem create enemy
+	e.x = 0
+	e.y = rnd(300)
+	e.w = 20
+	e.h = 20
+	e.speed = 0
+	e.type$ = "enemy"
+	e.moveDir$ = "right"
+	e.yactive = false
+
+	return e 
+endfunc
+rem end create enemy
+
+rem -------------------dosnt work
+function createenemyold?(speed,&o?[],&pos)
+	
+	rem single enemy object
+	e?
+	rem new object array size
+	newOSize = sizeof(o)+1
+	rem create new object array and copy the old into it
+	no?[newOSize]
+	c = copyr(o,no)
+	
+	rem create enemy
+	e.x = 0
+	e.y = rnd(300)
+	e.w = 20
+	e.h = 20
+	e.speed = speed
+	e.type$ = "enemy"
+	e.moveDir$ = "right"
+	e.yactive = false
+
+	rem add to new object array and then reset o to no
+	no[pos] = e
+	o[] = no
+	pos = pos+1
+	return e 
+endfunc
+rem end create enemy (dosnt work)
+
+rem init enemies
+function initEnemis(&o?[])
+
+	for i = 0 to sizeof(o)-1
+		rem o[i] = createenemy()
+	rem this is dumb
+	 o[i].x = 0
+	 o[i].y = rnd(300)
+	 o[i].w = 20
+	 o[i].h = 20
+	 o[i].speed = 0
+	 o[i].type$ = "enemy"
+	 o[i].moveDir$ = "right"
+	 o[i].yactive = false
+	next
+
+endfunc
+rem initEnemis
+
+rem update enemies
+function enemyUpdate(&o?[],&points)
+
+    for i = 0 to sizeof(o)-1
+			
+			if o[i].yactive 
+				c = moveEnemie(o[i],points)
+			endif
+
+    next
+	return 0
+endfunc
+rem end enemyUpdate
+
+rem handale enemy movment
+function moveEnemie(&o?,&points)
+
+	if o.moveDir$ = "right"
+		o.x = o.x+o.speed
+	endif
+
+	if o.moveDir$ = "left"
+		o.x = o.x-o.speed
+	endif
+	if o.moveDir$ = "up"
+		o.y = o.y-o.speed
+	endif
+
+	endif
+	if o.moveDir$ = "down"
+		o.y = o.y+o.speed
+	endif
+
+
+	if o.x >500
+		points = points+1
+		o.x = 0
+		o.y = rnd(400)
+	endif
+
+	if o.x < 0
+		points = points+1
+		o.x = 500
+		o.y = rnd(400)
+	endif
+
+	if o.y < 0 
+		points = points+1
+		o.x = rnd(400)
+		o.y = 500
+	endif
+
+	if o.y > 500 
+		points = points+1
+		o.x = rnd(400)
+		o.y = 0
+	endif
+
+endfunc
+rem end moveEnemies
+
+rem render enemies
+function renderEnemis(o?[])
+
+  for i = 0 to sizeof(o)-1
+			if o[i].yactive 
+				draw image 2, o[i].x, o[i].y
+			endif
+  next
+
+	return 0
+endfunc
+
+function spawnEnemy(&o?[])
+
+	rem search for inactive enemy
+	for i = 0 to sizeof(o)-1
+
+		rem found an inactive eney
+		if not o[i].yactive
+			
+			rem activate enemy
+			 o[i].yactive = true
+			rem give ir random speed
+			o[i].speed = rnd(2)+2
+			o[i].moveDir$ = rndDir()
+			rem exit func once done
+			return 0
+		endif
+
+
+	next
+	return 0
+endfunc
+rem end spawn enemy
+
+function rndDir$()
+
+	rndD = rnd(4)+1
+	if rndD = 1 then return "left"
+	if rndD = 2 then return "right"
+	if rndD = 3 then return "up"
+	if rndD = 4 then return "down"
+
+
+	
+
+endfunc
+
+rem spawnTimer function
+function spawnTimerf(&o?[],&count,ymax)
+
+	if ytimer(count,ymax) 
+		a = spawnEnemy(o)
+	endif
+endfunc
+rem end spawnTimerf
+
+rem -------------------- end enemy funcs ---------------
+
+rem timer
+
+function keyboardControl(&p?)
+
+
+        rem up
+      if keydown(VK_UP) 
+            p.y = p.y - p.speed
+            p.frame = 0
+
+        endif
+        rem down
+        if keydown(VK_DOWN) 
+            p.y = p.y + p.speed
+            p.frame = 2
+        endif
+        rem left
+        if keydown(VK_LEFT)
+            p.x = p.x - p.speed
+            p.frame = 3
+      endif 
+        rem right
+        if keydown(VK_RIGHT)
+            p.x = p.x + p.speed
+            p.frame = 1
+      endif
+
+    return 0
+endfunc  
+rem end kyboard control
+
+
+rem hit test function
+function collide(a?, b?)
+    if a.x + a.w < b.x then return false
+    if a.x > b.x + b.w then return false
+    if a.y + a.h < b.y then return false
+    if a.y > b.y + b.h then return false
+    return true
+endfunc
+rem end collide
+
+function ytimer(&counter,maxCount)
+
+	if counter>maxCount 
+		counter = 0
+		return true
+	endif
+	
+	counter = counter +1
+	return false
+endfunc
+rem end timer
+
+rem copy object array func
+function copyr(oldr?[],&newr?[])
+
+		newr?[sizeof(oldr)+1]
+	  for i = 0 to sizeof(oldr)-1
+
+			newr[i] = oldr[i]		
+
+		next
+
+		return 0
+
+endfunc
+rem end copyr
+
+rem -----------------screens----------------
+
+function textScreen(sr$[])
+	blinkTimer = 0
+	do
+		if keydown(VK_ESC, true) then end
+
+		
+		set caret width(primary)/2, 20
+
+		set color 255, 255, 255
+
+		for i = 0 to sizeof(sr)-1
+			center sr[i]
+		next
+
+		redraw
+    
+   	 _SPD_HoldFrame 60
+	until keydown(VK_SPACE, true) or not running()
+
+	return 0 
+
+endfunc
+
+function startScreen()
+
+	startTxt$[4]
+	startTxt[0] = "-generic avoider game"
+	startTxt[1] = "use arrow keys to move"
+	startTxt[2] = "avoid enemies"
+	startTxt[3] = "press space to start"	
+
+	c = textScreen(startTxt)
+
+endfunc
+
+function gameOverScreen(score)
+
+	s$ =   str$(score)
+	Txt$[4]
+	Txt[0] = "game over"
+	Txt[1] =   "your score is: "
+	Txt[2] = s
+	Txt[3] = "press space to re start"	
+
+	c = textScreen(Txt)
+
+endfunc
+
+rem -----------------end screens----------------
+
