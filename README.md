@@ -12,3 +12,5 @@ http://www.naalaa.com/
 
 if you need to contact me use this link:
 https://ytutor.wordpress.com/contact/
+
+![gif 1](https://github.com/yoel123/naalaa-avoider-game/blob/master/av.gif?raw=true)
